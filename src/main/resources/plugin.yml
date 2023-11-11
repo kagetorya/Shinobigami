@@ -1,0 +1,11 @@
+name: Shinobigami
+version: '${project.version}'
+main: iobb.kagetorya.shinobigami.Shinobigami
+api-version: 1.19
+
+commands:
+  shinobigami:
+    description: シノビガミ用のコマンドです
+    aliases: [shinobi,sg]
+    usage: §c/shinobigami [charactersheet] [make/delete/name] [IDを入力] (内容)
+    permission: op

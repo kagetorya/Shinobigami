@@ -11,9 +11,13 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static iobb.kagetorya.shinobigami.ShinobigamiUtils.getCharacterIDs;
 
+
+@SuppressWarnings("NullableProblems")
 public class ShinobigamiCommands implements TabExecutor {
     private final String prefix = "§5§lS§dhinobi §7》§f";
 
@@ -65,7 +69,22 @@ public class ShinobigamiCommands implements TabExecutor {
                         p.sendMessage("§cError: キャラクターの名前を入力してください");
                         return true;
                     }
-                    return setCharacterName(p,args[2],args[3]);
+                    return setCharacterInfo(p,args[2],"name",args[3]);
+                }
+                // キャラクターの背景の設定
+                else if(args[1].equalsIgnoreCase("back")){
+                    if(args.length == 2){
+                        p.sendMessage("§cError: キャラクターシートのIDを入力してください");
+                        return true;
+                    }
+                    //キャラクター名の例外処理
+                    if(args.length == 3){
+                        p.sendMessage("§cError: キャラクターの背景情報を入力してください");
+                        return true;
+                    }
+                    String lore = String.join("|",new ArrayList<>(Arrays.asList(args)).subList(3,args.length));
+                    lore = lore.replace("&","§");
+                    return setCharacterInfo(p,args[2],"back",lore);
                 }
             }
         }
@@ -115,7 +134,7 @@ public class ShinobigamiCommands implements TabExecutor {
                 // キャラクターシート管理での補完 [/Shinobigami charactersheet (delete/name)]
                 if(args[0].equalsIgnoreCase("charactersheet")) {
                     if(args[1].matches("(?i)(delete|name)")) {
-                        return getCharacters(p);
+                        return getCharacterIDs(p);
                     }
                 }
 
@@ -136,8 +155,14 @@ public class ShinobigamiCommands implements TabExecutor {
                 p.sendMessage(prefix+"§cプレイヤー別シート管理フォルダの生成に失敗しました。");
             }
         }
+        // 最大シート保持数の確認
+        if(getCharacterIDs(p) != null && getCharacterIDs(p).size() >= 18){
+            p.sendMessage(prefix+"§cキャラクターシートの所持数が最大です。どれかを消してから実行してください。");
+            return true;
+        }
         // シート保存ファイルの生成
         File sheet = new File(playerFolder ,id+".yml");
+
         if (!sheet.exists()){
             try {
                 if(sheet.createNewFile()){
@@ -173,7 +198,7 @@ public class ShinobigamiCommands implements TabExecutor {
         return true;
     }
 
-    public boolean setCharacterName(Player p,String id,String name){
+    public boolean setCharacterInfo(Player p,String id,String tag,String cont){
         File playerFolder = new File(sheetFolder,p.getUniqueId().toString());
         File sheet = new File(playerFolder,id+".yml");
         // idの例外処理
@@ -183,7 +208,7 @@ public class ShinobigamiCommands implements TabExecutor {
         }
         // キャラクター名の保存
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
-        cfg.set("name", name);
+        cfg.set(tag, cont);
         try{
             cfg.save(sheet);
         } catch (IOException e){
@@ -191,30 +216,8 @@ public class ShinobigamiCommands implements TabExecutor {
         }
 
         // 処理報告とエフェクト
-        p.sendMessage(prefix+"キャラクター名が["+name+"]に設定されました。§7id: "+id);
+        p.sendMessage(prefix+"データが設定されました。§7id: "+id);
         p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         return true;
     }
-
-    public List<String> getCharacters(Player p) {
-        File playerFolder = new File(sheetFolder, p.getUniqueId().toString());
-        List<String> characters = new ArrayList<>();
-
-        // 例外処理
-        if (!(playerFolder.exists())) {
-            p.sendMessage("Folder not found");
-            return null;
-        }
-
-        // ファイル群から名前を抽出しリスト化
-        File[] files = playerFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".yml"));
-        for (File file : files) {
-            String fileName = file.getName();
-            String character = fileName.substring(0, fileName.length() - 4);
-            characters.add(character);
-        }
-        return characters;
-    }
-
-
 }

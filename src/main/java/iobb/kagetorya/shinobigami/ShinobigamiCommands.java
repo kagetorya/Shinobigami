@@ -1,11 +1,8 @@
 package iobb.kagetorya.shinobigami;
 
-import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -14,14 +11,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static iobb.kagetorya.shinobigami.ShinobigamiUtils.getCharacterIDs;
+import static iobb.kagetorya.shinobigami.ShinobigamiGUI.openGUI;
+import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
 
 
 @SuppressWarnings("NullableProblems")
 public class ShinobigamiCommands implements TabExecutor {
     private final String prefix = "§5§lS§dhinobi §7》§f";
-
-    private final File sheetFolder = new File(Shinobigami.getInstance().getDataFolder(),"Sheets");
 
     @Override
     public boolean onCommand(CommandSender s, Command cmd, String label, String... args){
@@ -34,7 +30,8 @@ public class ShinobigamiCommands implements TabExecutor {
 
         if (cmd.getName().equalsIgnoreCase("shinobigami")){
             if(args.length == 0){
-                return false;
+                openGUI(p,"playerInfo");
+                return true;
             }
             // キャラクターシート管理コマンド
             if(args[0].equalsIgnoreCase("charactersheet")){
@@ -69,7 +66,8 @@ public class ShinobigamiCommands implements TabExecutor {
                         p.sendMessage("§cError: キャラクターの名前を入力してください");
                         return true;
                     }
-                    return setCharacterInfo(p,args[2],"name",args[3]);
+                    setCharacterInfo(p,args[2],"name",args[3]);
+                    return true;
                 }
                 // キャラクターの背景の設定
                 else if(args[1].equalsIgnoreCase("back")){
@@ -84,7 +82,26 @@ public class ShinobigamiCommands implements TabExecutor {
                     }
                     String lore = String.join("|",new ArrayList<>(Arrays.asList(args)).subList(3,args.length));
                     lore = lore.replace("&","§");
-                    return setCharacterInfo(p,args[2],"back",lore);
+                    setCharacterInfo(p,args[2],"back",lore);
+                    return true;
+                }
+                // キャラクターの流派の設定
+                else if(args[1].equalsIgnoreCase("style")){
+                    if(args.length == 2){
+                        p.sendMessage("§cError: キャラクターシートのIDを入力してください");
+                        return true;
+                    }
+                    //　キャラクター流派の例外処理
+                    if(args.length == 3){
+                        p.sendMessage("§cError: キャラクターの流派を入力してください");
+                        return true;
+                    }
+                    if(!args[3].matches("(?i)(hasuba|kurama|hagure|hirasaka|otogi|oni)")){
+                        p.sendMessage("§cError: 流派の入力形式が違います");
+                        return true;
+                    }
+                    setCharacterInfo(p,args[2],"style",args[3]);
+                    return true;
                 }
             }
         }
@@ -121,7 +138,7 @@ public class ShinobigamiCommands implements TabExecutor {
                 if(args[0].equalsIgnoreCase("charactersheet")) {
                     String str = args[1].toLowerCase();
                     ArrayList<String> candidates = new ArrayList<>();
-                    for (String list : new String[]{"make", "delete", "name"}) {
+                    for (String list : new String[]{"make", "delete", "name", "back", "style"}) {
                         if (list.startsWith(str)) {
                             candidates.add(list);
                         }
@@ -133,43 +150,46 @@ public class ShinobigamiCommands implements TabExecutor {
             else if(args.length == 3){
                 // キャラクターシート管理での補完 [/Shinobigami charactersheet (delete/name)]
                 if(args[0].equalsIgnoreCase("charactersheet")) {
-                    if(args[1].matches("(?i)(delete|name)")) {
+                    if(args[1].matches("(?i)(delete|name|back|style)")) {
                         return getCharacterIDs(p);
                     }
                 }
-
-
+            }
+            // args[3]の補完
+            else if(args.length == 4){
+                // キャラクターシート管理での補完 [/Shinobigami charactersheet (delete/name)]
+                if(args[0].equalsIgnoreCase("charactersheet")) {
+                    if(args[1].matches("(?i)(style)")) {
+                        String str = args[1].toLowerCase();
+                        ArrayList<String> candidates = new ArrayList<>();
+                        for (String list : new String[]{"hasuba", "kurama", "hagure", "hirasaka", "otogi","oni"}) {
+                            if (list.startsWith(str)) {
+                                candidates.add(list);
+                            }
+                        }
+                        return candidates;
+                    }
+                }
             }
         }
         return null;
     }
 
     public boolean makeCharacterSheet(Player p,String id){
-        File playerFolder = new File(sheetFolder,p.getUniqueId().toString());
-        // 例外処理
-        // プレイヤー別ディレクトリの生成
-        if(!playerFolder.exists()){
-            if(playerFolder.mkdirs()){
-                p.sendMessage(prefix+"プレイヤー別シート管理フォルダを生成しました。");
-            } else {
-                p.sendMessage(prefix+"§cプレイヤー別シート管理フォルダの生成に失敗しました。");
-            }
-        }
+        File sheet = getSheetPath(p,id);
         // 最大シート保持数の確認
         if(getCharacterIDs(p) != null && getCharacterIDs(p).size() >= 18){
             p.sendMessage(prefix+"§cキャラクターシートの所持数が最大です。どれかを消してから実行してください。");
             return true;
         }
         // シート保存ファイルの生成
-        File sheet = new File(playerFolder ,id+".yml");
-
         if (!sheet.exists()){
             try {
                 if(sheet.createNewFile()){
                     p.sendMessage(prefix+"キャラクターシート保存用ファイルを生成しました。§7id: "+id);
 
                 } else {
-                    p.sendMessage(prefix+"§cプレイヤー別シート管理フォルダの生成に失敗しました。");
+                    p.sendMessage(prefix+"§cキャラクターシート保存用ファイルの生成に失敗しました。");
                 }
             }catch(IOException e){
                 e.printStackTrace();
@@ -181,9 +201,8 @@ public class ShinobigamiCommands implements TabExecutor {
     }
 
     public boolean deleteCharacterSheet(Player p,String id){
-        File playerFolder = new File(sheetFolder,p.getUniqueId().toString());
         // 例外処理
-        File sheet = new File(playerFolder,id+".yml");
+        File sheet = getSheetPath(p,id);
         if(!(sheet.exists())){
             p.sendMessage("§cError: そのIDのキャラクターシートは存在しません");
             return false;
@@ -195,29 +214,6 @@ public class ShinobigamiCommands implements TabExecutor {
         } else {
             p.sendMessage(prefix+"キャラクターシートの削除に失敗しました。§7id: "+id);
         }
-        return true;
-    }
-
-    public boolean setCharacterInfo(Player p,String id,String tag,String cont){
-        File playerFolder = new File(sheetFolder,p.getUniqueId().toString());
-        File sheet = new File(playerFolder,id+".yml");
-        // idの例外処理
-        if(!(sheet.exists())){
-            p.sendMessage("§cError: そのIDのキャラクターシートは存在しません");
-            return false;
-        }
-        // キャラクター名の保存
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
-        cfg.set(tag, cont);
-        try{
-            cfg.save(sheet);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-
-        // 処理報告とエフェクト
-        p.sendMessage(prefix+"データが設定されました。§7id: "+id);
-        p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
         return true;
     }
 }

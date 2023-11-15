@@ -18,6 +18,7 @@ public final class Shinobigami extends JavaPlugin {
 
         instance = this;
         command = new ShinobigamiCommands();
+        getServer().getPluginManager().registerEvents(new ShinobigamiGUI(),this);
 
         // データフォルダの生成
         if(!getDataFolder().exists()){

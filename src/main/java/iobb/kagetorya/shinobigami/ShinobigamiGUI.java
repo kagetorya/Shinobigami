@@ -34,154 +34,199 @@ public class ShinobigamiGUI implements Listener {
     }
 
     public static void openGUI(Player p,String guiName) {
-        Inventory inv = null;
 
+        // プレイヤー用GUI [最初に開かれる階層]
         if (guiName.equalsIgnoreCase("playerInfo")) {
-            inv = Bukkit.createInventory(null,27,"§8- §dプレイヤー情報 §8-");
-
-            // GUI装飾配置
-            ItemStack deco = makeItemStack(new ItemStack(Material.PURPLE_STAINED_GLASS_PANE)," "," ");
-            for (int num = 0; num < 9; num++) {
-                inv.setItem(num,deco);
-                inv.setItem(num+18,deco);
-            }
-            deco = makeItemStack(new ItemStack(Material.IRON_BARS)," ", " ");
-            inv.setItem(9,deco);
-            inv.setItem(17,deco);
-
-            // ギミックアイテム
-            inv.setItem(11,playerInfoItems.get("sheet"));
+            openPlayerInfoGUI(p);
         }
-
+        // キャラクターシート管理GUI
         else if(guiName.equalsIgnoreCase("sheets")) {
-            inv = Bukkit.createInventory(null, 27, "§8- §eキャラクターシート一覧 §8-");
-
-            // GUI装飾配置
-            ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
-            for (int num = 0; num < 9; num++)
-                inv.setItem(num, deco);
-
-            if (getCharacterIDs(p).size() == 0) {
-                inv.setItem(13, makeItemStack(new ItemStack(Material.BARRIER), "§cキャラクターシートが存在しません。", "§f以下のコマンドで作成できます。", "§f[/shinobi charactersheet make (好きなID)]", " ", "§7※IDはファイル管理用なのでキャラ名とは別の物です。"));
-                return;
-            }
-
-            // キャラクターシートの一覧表示
-            int slot = 9;
-            for(String id : getCharacterIDs(p)){
-                File sheet = getSheetPath(p,id);
-                FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
-                if(cfg.get("name") == null){
-                    inv.setItem(slot,makeItemStack(new ItemStack(Material.PAPER),"§b"+id,"§f名前: §c未設定"," ","§f以下のコマンドで名前を設定できます。","§f[/shinobi charactersheet name "+id+" (好きな名前)]"));
-                } else {
-                    inv.setItem(slot,makeItemStack(new ItemStack(Material.PAPER),"§b"+id,"§f名前: "+cfg.get("name")," ","§fクリックで詳細設定へ移動できます。"));
-                }
-                slot ++;
-            }
+            openCharacterManagerGUI(p);
         }
-
-        else if(guiName.startsWith("id:")){
-            String id = guiName.replace("id:","");
-            inv = Bukkit.createInventory(null,27,"§8- §6キャラクターシート §8- §7ID:"+id);
-            File sheet = getSheetPath(p,id);
-            FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
-
-            // GUI装飾配置
-            ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
-            for (int num = 0; num < 9; num++)
-                inv.setItem(num, deco);
-
-            // 名前/背景情報
-            String[] back;
-            if(cfg.get("back") == null){
-                back = new String[]{"§c背景情報は未設定です。", "§f以下のコマンドで名前を設定できます。", "§f[/shinobi charactersheet back " + id + " (好きな内容)]"};
-            } else {
-                back = cfg.getString("back").split("\\|");
-            }
-            inv.setItem(10,makeItemStack(new ItemStack(Material.NAME_TAG),(String) cfg.get("name"),back));
-
-            // 流派情報
-            if(cfg.get("style") == null){
-                inv.setItem(12,makeItemStack(new ItemStack(Material.BARRIER),"§d流派§7: §c未設定","§fクリックすることで設定出来ます。"));
-            } else {
-                inv.setItem(12, playerInfoItems.get(cfg.get("style")));
-            }
+        // 指定キャラクターの編集
+        else if(guiName.startsWith("charaediter id:")){
+            openCharacterEditer(p,getID(guiName));
         }
-        else if(guiName.startsWith("style:")){
-            String id = guiName.replace("style:","");
-            inv = Bukkit.createInventory(null,27,"§8- §5流派選択 §8- §7id:"+id);
-
-            ItemStack deco = makeItemStack(new ItemStack(Material.RED_STAINED_GLASS_PANE), " ", " ");
-            for (int num = 0; num < 9; num++)
-                inv.setItem(num, deco);
-
-            inv.setItem(11,playerInfoItems.get("hasuba"));
-            inv.setItem(13,playerInfoItems.get("kurama"));
-            inv.setItem(15,playerInfoItems.get("hagure"));
-            inv.setItem(20,playerInfoItems.get("hirasaka"));
-            inv.setItem(22,playerInfoItems.get("otogi"));
-            inv.setItem(24,playerInfoItems.get("oni"));
+        // 流派選択GUI
+        else if(guiName.startsWith("styleselector id:")){
+            openStyleSelector(p,getID(guiName));
         }
         // 例外処理
         else {
             p.sendMessage("§cError: そのGUIは存在しません。");
         }
-
-        if(inv == null){
-            p.sendMessage("§cError: そのGUIは存在しません");
-            return;
-        }
+        // GUIが開かれる音
         p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK,1,1);
-        p.openInventory(inv);
     }
 
     @EventHandler
     public static void onInventoryClick(InventoryClickEvent e){
+        if(e.getView().getTitle().equalsIgnoreCase("§8- §dプレイヤー情報 §8-")){
+            clickedPlayerInfoGUI(e);
+        } else if(e.getView().getTitle().equalsIgnoreCase("§8- §eキャラクターシート一覧 §8-")){
+            clickedCharacterManagerGUI(e);
+        } else if (e.getView().getTitle().startsWith("§8- §6キャラクターシート §8- §7ID:")) {
+            clickedCharacterEditer(e);
+        } else if(e.getView().getTitle().startsWith("§8- §5流派選択 §8- §7id:")){
+            clickedStyleSelector(e);
+        }
+    }
+
+    // プレイヤー用GUI
+    public static void openPlayerInfoGUI(Player p){
+        Inventory inv = Bukkit.createInventory(null,27,"§8- §dプレイヤー情報 §8-");
+
+        // GUI装飾配置
+        ItemStack deco = makeItemStack(new ItemStack(Material.PURPLE_STAINED_GLASS_PANE)," "," ");
+        for (int num = 0; num < 9; num++) {
+            inv.setItem(num,deco);
+            inv.setItem(num+18,deco);
+        }
+        deco = makeItemStack(new ItemStack(Material.IRON_BARS)," ", " ");
+        inv.setItem(9,deco);
+        inv.setItem(17,deco);
+
+        // ギミックアイテム
+        inv.setItem(11,playerInfoItems.get("sheet"));
+
+        p.openInventory(inv);
+    }
+    public static void clickedPlayerInfoGUI(InventoryClickEvent e){
+        // 例外処理
         Player p = (Player) e.getWhoClicked();
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
 
-        if(e.getView().getTitle().equalsIgnoreCase("§8- §dプレイヤー情報 §8-")){
-            e.setCancelled(true);
+        e.setCancelled(true);
 
-            if(e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§7- §eキャラクターシート §7-")){
-                openGUI(p,"sheets");
-            }
-        } else if(e.getView().getTitle().equalsIgnoreCase("§8- §eキャラクターシート一覧 §8-")){
-            e.setCancelled(true);
-
-            if(e.getCurrentItem().getType().equals(Material.PAPER)){
-                String id = e.getCurrentItem().getItemMeta().getDisplayName().replace("§b","");
-                openGUI(p,"id:"+id);
-            }
-        } else if (e.getView().getTitle().startsWith("§8- §6キャラクターシート §8- §7ID:")) {
-            e.setCancelled(true);
-
-            String id = e.getView().getTitle().replace("§8- §6キャラクターシート §8- §7ID:","");
-            if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
-                openGUI(p,"style:"+id);
-            }
+        if(e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§7- §eキャラクターシート §7-")){
+            openGUI(p,"sheets");
         }
-        else if(e.getView().getTitle().startsWith("§8- §5流派選択 §8- §7id:")){
-            e.setCancelled(true);
+    }
 
-            String id = e.getView().getTitle().replace("§8- §5流派選択 §8- §7id:","");
+    // キャラクターシート管理GUI
+    public static void openCharacterManagerGUI(Player p){
+        Inventory inv = Bukkit.createInventory(null, 27, "§8- §eキャラクターシート一覧 §8-");
 
-            if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
-                List<String> lores = e.getCurrentItem().getItemMeta().getLore();
-                if(lores == null){
-                    return;
-                }
-                String lastLore = lores.get(lores.size()-1);
-                String cont = lastLore.replace("§8style id: ","");
+        // GUI装飾配置
+        ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
+        for (int num = 0; num < 9; num++)
+            inv.setItem(num, deco);
 
-                setCharacterInfo(p,id,"style",cont);
-                openGUI(p,"id:"+id);
+        if (getCharacterIDs(p).isEmpty()) {
+            inv.setItem(13, makeItemStack(new ItemStack(Material.BARRIER), "§cキャラクターシートが存在しません。", "§f以下のコマンドで作成できます。", "§f[/shinobi charactersheet make (好きなID)]", " ", "§7※IDはファイル管理用なのでキャラ名とは別の物です。"));
+            return;
+        }
+
+        // キャラクターシートの一覧表示
+        int slot = 9;
+        for(String id : getCharacterIDs(p)){
+            File sheet = getSheetPath(p,id);
+            FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+            if(cfg.get("name") == null){
+                inv.setItem(slot,makeItemStack(new ItemStack(Material.PAPER),"§b"+id,"§f名前: §c未設定"," ","§f以下のコマンドで名前を設定できます。","§f[/shinobi charactersheet name "+id+" (好きな名前)]"));
+            } else {
+                inv.setItem(slot,makeItemStack(new ItemStack(Material.PAPER),"§b"+id,"§f名前: "+cfg.get("name")," ","§fクリックで詳細設定へ移動できます。"));
             }
+            slot ++;
+        }
+        p.openInventory(inv);
+    }
+    public static void clickedCharacterManagerGUI(InventoryClickEvent e){
+        // 例外処理
+        Player p = (Player) e.getWhoClicked();
+        if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
+            return;
+        }
+        e.setCancelled(true);
 
+        if(e.getCurrentItem().getType().equals(Material.PAPER)){
+            String id = e.getCurrentItem().getItemMeta().getDisplayName().replace("§b","");
+            openGUI(p,"charaediter id:"+id);
+        }
+    }
 
+    // 指定キャラクターの編集
+    public static void openCharacterEditer(Player p,String id){
+        Inventory inv = Bukkit.createInventory(null,27,"§8- §6キャラクターシート §8- §7ID:"+id);
+        File sheet = getSheetPath(p,id);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
 
+        // GUI装飾配置
+        ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
+        for (int num = 0; num < 9; num++)
+            inv.setItem(num, deco);
+
+        // 名前/背景情報
+        String[] back;
+        String str = cfg.getString("back");
+        if(str == null){
+            back = new String[]{"§c背景情報は未設定です。", "§f以下のコマンドで名前を設定できます。", "§f[/shinobi charactersheet back " + id + " (好きな内容)]"};
+        } else {
+            back = str.split("\\|");
+        }
+        inv.setItem(10,makeItemStack(new ItemStack(Material.NAME_TAG),(String) cfg.get("name"),back));
+
+        // 流派情報
+        if(cfg.get("style") == null){
+            inv.setItem(12,makeItemStack(new ItemStack(Material.BARRIER),"§d流派§7: §c未設定","§fクリックすることで設定出来ます。"));
+        } else {
+            inv.setItem(12, playerInfoItems.get(cfg.getString("style")));
+        }
+        p.openInventory(inv);
+    }
+    public static void clickedCharacterEditer(InventoryClickEvent e){
+        // 例外処理
+        Player p = (Player) e.getWhoClicked();
+        if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
+            return;
+        }
+        e.setCancelled(true);
+
+        String id = e.getView().getTitle().replace("§8- §6キャラクターシート §8- §7ID:","");
+        if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
+            openGUI(p,"styleselector id:"+id);
+        }
+    }
+
+    // 流派選択GUI
+    public static void openStyleSelector(Player p,String id){
+        Inventory inv = Bukkit.createInventory(null,27,"§8- §5流派選択 §8- §7id:"+id);
+
+        ItemStack deco = makeItemStack(new ItemStack(Material.RED_STAINED_GLASS_PANE), " ", " ");
+        for (int num = 0; num < 9; num++)
+            inv.setItem(num, deco);
+
+        inv.setItem(11,playerInfoItems.get("hasuba"));
+        inv.setItem(13,playerInfoItems.get("kurama"));
+        inv.setItem(15,playerInfoItems.get("hagure"));
+        inv.setItem(20,playerInfoItems.get("hirasaka"));
+        inv.setItem(22,playerInfoItems.get("otogi"));
+        inv.setItem(24,playerInfoItems.get("oni"));
+
+        p.openInventory(inv);
+    }
+    public static void clickedStyleSelector(InventoryClickEvent e){
+        // 例外処理
+        Player p = (Player) e.getWhoClicked();
+        if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
+            return;
+        }
+        e.setCancelled(true);
+
+        String id = e.getView().getTitle().replace("§8- §5流派選択 §8- §7id:","");
+
+        if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
+            List<String> lores = e.getCurrentItem().getItemMeta().getLore();
+            if(lores == null){
+                return;
+            }
+            String lastLore = lores.get(lores.size()-1);
+            String cont = lastLore.replace("§8style id: ","");
+
+            setCharacterInfo(p,id,"style",cont);
+            openGUI(p,"id:"+id);
         }
     }
 }

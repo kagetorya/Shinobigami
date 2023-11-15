@@ -12,8 +12,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ShinobigamiUtils {
+
+    public static final Logger logger = Logger.getLogger(ShinobigamiUtils.class.getName());
     // アイテムName変更
     public static ItemStack setItemName(ItemStack is, String name){
         if(is.getItemMeta() == null){
@@ -55,14 +59,14 @@ public class ShinobigamiUtils {
         // 例外処理
         if (!(playerFolder.exists())) {
             p.sendMessage("Folder not found");
-            return null;
+            return characters;
         }
 
         // ファイル群から名前を抽出しリスト化
         File[] files = playerFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".yml"));
         // 例外処理
         if(files == null){
-            return null;
+            return characters;
         }
         // List化
         for (File file : files) {
@@ -89,6 +93,14 @@ public class ShinobigamiUtils {
         return new File(playerFolder,id+".yml");
     }
 
+    public static String getID(String str){
+        int index = str.lastIndexOf("id:");
+        if(index == -1){
+            return str;
+        }
+        return str.substring(index+"id:".length());
+    }
+
     public static void setCharacterInfo(Player p,String id,String tag,String cont){
         File sheet = getSheetPath(p,id);
         // idの例外処理
@@ -102,7 +114,7 @@ public class ShinobigamiUtils {
         try{
             cfg.save(sheet);
         } catch (IOException e){
-            e.printStackTrace();
+            logger.log(Level.SEVERE,"couldn't save file");
         }
 
         // 処理報告とエフェクト

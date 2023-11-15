@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 
 import static iobb.kagetorya.shinobigami.ShinobigamiGUI.openGUI;
 import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
@@ -178,7 +179,7 @@ public class ShinobigamiCommands implements TabExecutor {
     public boolean makeCharacterSheet(Player p,String id){
         File sheet = getSheetPath(p,id);
         // 最大シート保持数の確認
-        if(getCharacterIDs(p) != null && getCharacterIDs(p).size() >= 18){
+        if(getCharacterIDs(p).size() >= 18){
             p.sendMessage(prefix+"§cキャラクターシートの所持数が最大です。どれかを消してから実行してください。");
             return true;
         }
@@ -192,7 +193,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     p.sendMessage(prefix+"§cキャラクターシート保存用ファイルの生成に失敗しました。");
                 }
             }catch(IOException e){
-                e.printStackTrace();
+                logger.log(Level.SEVERE,"couldn't make file");
             }
         } else {
             p.sendMessage(prefix+"そのIDは既に存在しています。§7id: "+id);

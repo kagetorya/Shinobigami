@@ -3,6 +3,8 @@ package iobb.kagetorya.shinobigami;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -104,6 +106,48 @@ public class ShinobigamiCommands implements TabExecutor {
                     setCharacterInfo(p,args[2],"style",args[3]);
                     return true;
                 }
+                // キャラクターの階級の設定
+                else if(args[1].equalsIgnoreCase("rank")){
+                    if(args.length == 2){
+                        p.sendMessage("§cError: キャラクターシートのIDを入力してください");
+                        return true;
+                    }
+                    //　階級の例外処理
+                    if(args.length == 3){
+                        p.sendMessage("§cError: 階級を入力してください");
+                        return true;
+                    }
+
+                    if(!args[3].matches("(?i)(grass|low|lowtop|mid|midtop|high|hightop|head)")){
+                        p.sendMessage("§cError: 階級の入力形式が違います");
+                        return true;
+                    }
+                    setCharacterInfo(p,args[2],"rank",args[3]);
+                    return true;
+                }
+                // キャラクターの特技の設定
+                else if(args[1].equalsIgnoreCase("skill")){
+                    if(args.length == 2){
+                        p.sendMessage("§cError: キャラクターシートのIDを入力してください");
+                        return true;
+                    }
+                    //　特技の例外処理
+                    if(args.length == 3){
+                        p.sendMessage("§cError: 特技を入力してください");
+                        return true;
+                    }
+                    // スキル設定処理
+                    File sheet = getSheetPath(p,args[2]);
+                    FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+
+                    List<String> skillList = cfg.getStringList("skills");
+                    skillList.add(args[3]);
+
+                    setCharacterInfoList(p,args[2],"skills",skillList);
+                    return true;
+
+                }
+
             }
         }
         return false;

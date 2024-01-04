@@ -1,5 +1,6 @@
 package iobb.kagetorya.shinobigami;
 
+import net.md_5.bungee.api.chat.*;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -51,6 +52,14 @@ public class ShinobigamiUtils {
         is = setItemLore(is,list);
         return is;
     }
+
+    public static TextComponent makeText(String str,String hover,String command) {
+        TextComponent text = new TextComponent(str);
+        text.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command));
+        text.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hover).create()));
+        return text;
+    }
+
     public static List<String> getCharacterIDs(Player p) {
         File sheetFolder = new File(Shinobigami.getInstance().getDataFolder(),"Sheets");
         File playerFolder = new File(sheetFolder, p.getUniqueId().toString());
@@ -102,6 +111,27 @@ public class ShinobigamiUtils {
     }
 
     public static void setCharacterInfo(Player p,String id,String tag,String cont){
+        File sheet = getSheetPath(p,id);
+        // idの例外処理
+        if(!(sheet.exists())){
+            p.sendMessage("§cError: そのIDのキャラクターシートは存在しません");
+            return;
+        }
+        // キャラクター名の保存
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        cfg.set(tag, cont);
+        try{
+            cfg.save(sheet);
+        } catch (IOException e){
+            logger.log(Level.SEVERE,"couldn't save file");
+        }
+
+        // 処理報告とエフェクト
+        p.sendMessage("§5§lS§dhinobi §7》データが設定されました。§7id: "+id);
+        p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
+    }
+
+    public static void setCharacterInfoList(Player p,String id,String tag,List<String> cont){
         File sheet = getSheetPath(p,id);
         // idの例外処理
         if(!(sheet.exists())){

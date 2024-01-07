@@ -4,7 +4,9 @@ import net.md_5.bungee.api.chat.*;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -35,8 +37,26 @@ public class ShinobigamiUtils {
         if(is == null || is.getItemMeta() == null){
             return is;
         }
+        List<String> newLores = new ArrayList<>();
+
+        for (String lore : lores) {
+            String[] lines = lore.split("\\n");
+            newLores.addAll(Arrays.asList(lines));
+        }
+
         ItemMeta im = is.getItemMeta();
-        im.setLore(lores);
+        im.setLore(newLores);
+        is.setItemMeta(im);
+        return is;
+    }
+
+    // アイテムLore変更
+    public static ItemStack setItemFlag(ItemStack is){
+        if(is == null || is.getItemMeta() == null){
+            return is;
+        }
+        ItemMeta im = is.getItemMeta();
+        im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,ItemFlag.HIDE_ENCHANTS,ItemFlag.HIDE_DYE,ItemFlag.HIDE_POTION_EFFECTS);
         is.setItemMeta(im);
         return is;
     }
@@ -50,6 +70,18 @@ public class ShinobigamiUtils {
         List<String> list = new ArrayList<>(Arrays.asList(lore));
         is = setItemName(is,name);
         is = setItemLore(is,list);
+        is = setItemFlag(is);
+        return is;
+    }
+
+    // アイテムスタックのエンチャント
+    public static ItemStack makeEnchantedItemStack(ItemStack is){
+        if(is == null || is.getItemMeta() == null){
+            return is;
+        }
+        ItemMeta im = is.getItemMeta();
+        im.addEnchant(Enchantment.DURABILITY,1,true);
+        is.setItemMeta(im);
         return is;
     }
 
@@ -110,7 +142,7 @@ public class ShinobigamiUtils {
         return str.substring(index+"id:".length());
     }
 
-    public static void setCharacterInfo(Player p,String id,String tag,String cont){
+    public static void setSheet(Player p,String id,String tag,String cont){
         File sheet = getSheetPath(p,id);
         // idの例外処理
         if(!(sheet.exists())){
@@ -131,7 +163,7 @@ public class ShinobigamiUtils {
         p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
     }
 
-    public static void setCharacterInfoList(Player p,String id,String tag,List<String> cont){
+    public static void setSheetAsList(Player p,String id,String tag,List<String> cont){
         File sheet = getSheetPath(p,id);
         // idの例外処理
         if(!(sheet.exists())){

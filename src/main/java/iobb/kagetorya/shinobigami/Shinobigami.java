@@ -7,6 +7,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.List;
 
+import static iobb.kagetorya.shinobigami.ShinobigamiTables.setupTables;
+
 public final class Shinobigami extends JavaPlugin {
 
     private static Shinobigami instance;
@@ -37,6 +39,8 @@ public final class Shinobigami extends JavaPlugin {
                 getLogger().info("キャラクターシート管理フォルダの生成に失敗しました。");
             }
         }
+        // テーブルのセットアップ
+        setupTables();
         // 有効化の報告
         getLogger().info("プラグインが有効化されました。");
     }

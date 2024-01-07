@@ -13,57 +13,43 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static iobb.kagetorya.shinobigami.ShinobigamiSkillManager.openSkillMenu;
+import static iobb.kagetorya.shinobigami.ShinobigamiTables.*;
 import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
 
 public class ShinobigamiGUI implements Listener {
-    private static final Map<String, ItemStack> playerInfoItems = new HashMap<>();
-    static {
-        playerInfoItems.put("sheet",makeItemStack(new ItemStack(Material.PAPER),"§7- §eキャラクターシート §7-","§fクリックすると所持キャラクターの","§f一覧を開き、それぞれの項目を参照できます。"));
-
-        playerInfoItems.put("hasuba",makeItemStack((new ItemStack(Material.CRAFTING_TABLE)),"§d流派§7: §f斜歯忍軍 §7-ハスバ-","§f流儀§7: §f他の流派の「奥義の内容」を集める。","§e得意分野: 器術 §8/ §c仇敵: 鞍馬神流"," ","§f雑賀衆の流れを汲み、忍器の研究/開発を得意とする流派。","§f世の中すべての忍法を解析し、誰でも使える忍器へ","§f落とし込むことに並々ならぬ労力を費やす。","§f流派の目標は斜歯を全統一流派にすることである。","§8style id: hasuba"));
-        playerInfoItems.put("kurama",makeItemStack((new ItemStack(Material.BOW)),"§d流派§7: §f鞍馬神流 §7-クラマ-","§f流儀§7: §fシノビガミの復活を阻止する。","§e得意分野: 体術 §8/ §c仇敵: 隠忍の血統"," ","§f京八流を源流に持つ戦士達の流派。","§f武術の達人で構成されており、その戦闘技術は","§fシノビガミ顕現にまつわる六神器を他勢力から","§f守り、封印するために用いられる。","§8style id: kurama"));
-        playerInfoItems.put("hagure",makeItemStack((new ItemStack(Material.ENDER_PEARL)),"§d流派§7: §fハグレモノ §7-ハグレ-","§f流儀§7: §f誰にも縛られず、自分の意志で戦う。","§e得意分野: 忍術 §8/ §c仇敵: 斜歯忍軍"," ","§f厳密には流派ではないが無視できない勢力。","§fフリーの忍者や抜け忍、小さな里や血盟で結ばれた者たち。","§f緩やかに協力することもあるが特定の目的は持たない。","§8style id: hagure"));
-        playerInfoItems.put("hirasaka",makeItemStack((new ItemStack(Material.GOLD_INGOT)),"§d流派§7: §f比良坂機関 §7-ヒラサカ-","§f流儀§7: §f日本の国益を守る。","§e得意分野: 詐術 §8/ §c仇敵: 私立御斎学園"," ","§f比良坂流古神道を背景に持つ日本の諜報機関。","§f政府との繋がりが強く、国防/国益を最優先に動く。","§f政治力や経済力を用いた陰謀や工作を得意とし暗躍する。","§8style id: hirasaka"));
-        playerInfoItems.put("otogi",makeItemStack((new ItemStack(Material.WRITABLE_BOOK)),"§d流派§7: §f私立御斎学園 §7-オトギ-","§f流儀§7: §f誰かの秘密を探す。","§e得意分野: 戦術 §8/ §c仇敵: ハグレモノ"," ","§f表向きには小中高一貫の進学校。","§f実際には、異能を持つが制御しきれない少年少女への","§f忍者教育を施す忍者養成機関である。","§f国内外の財閥や研究/諜報機関の支援を受ける留学者も多い。","§8style id: otogi"));
-        playerInfoItems.put("oni",makeItemStack((new ItemStack(Material.REDSTONE_TORCH)),"§d流派§7: §f隠忍ノ血統 §7-オニ-","§f流儀§7: §fシノビガミ復活に関する情報を入手する。","§e得意分野: 妖術 §8/ §c仇敵: 比良坂機関"," ","§f古代日本において鬼や土蜘蛛と呼ばれた者の末裔。","§f鬼や人狼のような人外が多く「荒夜§7-ナイト・ゴーント§f」とも呼ばれる。","§f権力者達から虐げられた歴史を持ち、国家権力に強い憎悪を抱く。","§8style id: oni"));
-
-        playerInfoItems.put("grass",makeItemStack(new ItemStack(Material.GRASS),"§a階級§7: §f草忍","§d忍法: 1§8/§b特技: 4§8/§e奥義: なし","§8rank id: grass"));
-        playerInfoItems.put("low",makeItemStack(new ItemStack(Material.LEATHER_BOOTS),"§a階級§7: §f下忍","§d忍法: 2§8/§b特技: 5§8/§e奥義: なし","§8rank id: low"));
-        playerInfoItems.put("lowtop",makeItemStack(new ItemStack(Material.LEATHER_HELMET),"§a階級§7: §f下忍頭","§d忍法: 3§8/§b特技: 5§8/§e奥義: なし","§8rank id: lowtop"));
-        playerInfoItems.put("mid",makeItemStack(new ItemStack(Material.IRON_BOOTS),"§a階級§7: §f中忍","§d忍法: 4§8/§b特技: 6§8/§e奥義: 1","§8rank id: mid"));
-        playerInfoItems.put("midtop",makeItemStack(new ItemStack(Material.IRON_HELMET),"§a階級§7: §f中忍頭","§d忍法: 5§8/§b特技: 6§8/§e奥義: 1","§7※功績点を10消費","§8rank id: midtop"));
-        playerInfoItems.put("high",makeItemStack(new ItemStack(Material.DIAMOND_BOOTS),"§a階級§7: §f上忍","§d忍法: 6§8/§b特技: 7§8/§e奥義: 2","§7※功績点を20消費","§8rank id: high"));
-        playerInfoItems.put("hightop",makeItemStack(new ItemStack(Material.DIAMOND_HELMET),"§a階級§7: §f上忍頭","§d忍法: 7§8/§b特技: 7§8/§e奥義: 2","§7※功績点を50消費","§8rank id: hightop"));
-        playerInfoItems.put("head",makeItemStack(new ItemStack(Material.WITHER_SKELETON_SKULL),"§a階級§7: §f頭領","§d忍法: 8§8/§b特技: 8§8/§e奥義: 3","§7※功績点を100消費","§8rank id: head"));
-    }
 
     public static void openGUI(Player p,String guiName) {
 
-        // プレイヤー用GUI [最初に開かれる階層]
-        if (guiName.equalsIgnoreCase("playerInfo")) {
-            openPlayerInfoGUI(p);
+        // ターミナル(プレイヤー用)
+        if (guiName.equalsIgnoreCase("terminal")) {
+            openTerminal(p);
         }
         // キャラクターシート管理GUI
-        else if(guiName.equalsIgnoreCase("sheets")) {
-            openCharacterManagerGUI(p);
+        else if(guiName.equalsIgnoreCase("sheetSelector")) {
+            openSheetSelector(p);
         }
         // 指定キャラクターの編集
-        else if(guiName.startsWith("charaediter id:")){
-            openCharacterEditer(p,getID(guiName));
+        else if(guiName.startsWith("sheetEditor_id:")){
+            openSheetEditor(p,getID(guiName));
         }
         // 流派選択GUI
-        else if(guiName.startsWith("styleselector id:")){
+        else if(guiName.startsWith("styleSelector_id:")){
             openStyleSelector(p,getID(guiName));
         }
         // 階級選択GUI
-        else if(guiName.startsWith("rankselector id:")){
+        else if(guiName.startsWith("rankSelector_id:")){
             openRankSelector(p,getID(guiName));
         }
+        // 忍法選択GUI
+        else if(guiName.startsWith("artsSelector_id:")){
+            openArtSlotSelector(p,getID(guiName));
+        }
+
         // 例外処理
         else {
             p.sendMessage("§cError: そのGUIは存在しません。");
@@ -74,63 +60,69 @@ public class ShinobigamiGUI implements Listener {
 
     @EventHandler
     public static void onInventoryClick(InventoryClickEvent e){
-        if(e.getView().getTitle().equalsIgnoreCase("§8- §dプレイヤー情報 §8-")){
-            clickedPlayerInfoGUI(e);
-        } else if(e.getView().getTitle().equalsIgnoreCase("§8- §eキャラクターシート一覧 §8-")){
-            clickedCharacterManagerGUI(e);
-        } else if (e.getView().getTitle().startsWith("§8- §6キャラクターシート §8- §7ID:")) {
-            clickedCharacterEditer(e);
-        } else if(e.getView().getTitle().startsWith("§8- §5流派選択 §8- §7id:")){
+        if(e.getView().getTitle().equals(guiTitles.get("terminal"))){
+            clickedTerminal(e);
+        } else if(e.getView().getTitle().equals(guiTitles.get("sheetSelector"))){
+            clickedSheetSelector(e);
+        } else if (e.getView().getTitle().startsWith(guiTitles.get("sheetEditor"))) {
+            clickedCharacterEditor(e);
+        } else if(e.getView().getTitle().startsWith(guiTitles.get("styleSelector"))){
             clickedStyleSelector(e);
-        } else if(e.getView().getTitle().startsWith("§8- §3階級選択 §8- §7id:")) {
+        } else if(e.getView().getTitle().startsWith(guiTitles.get("rankSelector"))){
             clickedRankSelector(e);
+        } else if(e.getView().getTitle().startsWith(guiTitles.get("artsSlotSelector"))){
+            clickedArtSlotSelector(e);
+        } else if(e.getView().getTitle().startsWith(guiTitles.get("artsSelector"))){
+            clickedArtsSelector(e);
         }
     }
 
-    // プレイヤー用GUI
-    public static void openPlayerInfoGUI(Player p){
-        Inventory inv = Bukkit.createInventory(null,27,"§8- §dプレイヤー情報 §8-");
+    // ターミナル
+    public static void openTerminal(Player p){
+        Inventory inv = Bukkit.createInventory(null,27,guiTitles.get("terminal"));
 
         // GUI装飾配置
-        ItemStack deco = makeItemStack(new ItemStack(Material.PURPLE_STAINED_GLASS_PANE)," "," ");
         for (int num = 0; num < 9; num++) {
-            inv.setItem(num,deco);
-            inv.setItem(num+18,deco);
+            inv.setItem(num,guiItems.get("blackPane"));
+            inv.setItem(num+18,guiItems.get("blackPane"));
         }
-        deco = makeItemStack(new ItemStack(Material.IRON_BARS)," ", " ");
-        inv.setItem(9,deco);
-        inv.setItem(17,deco);
+        inv.setItem(9,guiItems.get("ironBars"));
+        inv.setItem(17,guiItems.get("ironBars"));
 
         // ギミックアイテム
-        inv.setItem(11,playerInfoItems.get("sheet"));
+        inv.setItem(11,guiItems.get("terminal_sheetSelector"));
 
+        // GUIの表示
         p.openInventory(inv);
     }
-    public static void clickedPlayerInfoGUI(InventoryClickEvent e){
+    public static void clickedTerminal(InventoryClickEvent e){
         // 例外処理
         Player p = (Player) e.getWhoClicked();
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
 
+        // 持ち出し防止
         e.setCancelled(true);
 
-        if(e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§7- §eキャラクターシート §7-")){
-            openGUI(p,"sheets");
+        // ギミックアイテム
+        if(e.getCurrentItem().equals(guiItems.get("terminal_sheetSelector"))){
+            openGUI(p,"sheetSelector");
         }
     }
 
-    // キャラクターシート管理GUI
-    public static void openCharacterManagerGUI(Player p){
-        Inventory inv = Bukkit.createInventory(null, 27, "§8- §eキャラクターシート一覧 §8-");
+    // シートセレクター
+    public static void openSheetSelector(Player p){
+        Inventory inv = Bukkit.createInventory(null, 27, guiTitles.get("sheetSelector"));
 
         // GUI装飾配置
-        ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
         for (int num = 0; num < 9; num++)
-            inv.setItem(num, deco);
+            inv.setItem(num, guiItems.get("lightBluePane"));
 
+        // シートが存在しない場合
         if (getCharacterIDs(p).isEmpty()) {
-            inv.setItem(13, makeItemStack(new ItemStack(Material.BARRIER), "§cキャラクターシートが存在しません。", "§f以下のコマンドで作成できます。", "§f[/shinobi charactersheet make (好きなID)]", " ", "§7※IDはファイル管理用なのでキャラ名とは別の物です。"));
+            inv.setItem(13, guiItems.get("sheetSelector_empty"));
+            p.openInventory(inv);
             return;
         }
 
@@ -146,86 +138,141 @@ public class ShinobigamiGUI implements Listener {
             }
             slot ++;
         }
+
+        // 戻るアイテム
+        inv.setItem(26,guiItems.get("terminal_back"));
+        // GUIの表示
         p.openInventory(inv);
     }
-    public static void clickedCharacterManagerGUI(InventoryClickEvent e){
+    public static void clickedSheetSelector(InventoryClickEvent e){
         // 例外処理
         Player p = (Player) e.getWhoClicked();
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
+        //持ち出し防止
         e.setCancelled(true);
 
+        // シート選択
         if(e.getCurrentItem().getType().equals(Material.PAPER)){
             String id = e.getCurrentItem().getItemMeta().getDisplayName().replace("§b","");
-            openGUI(p,"charaediter id:"+id);
+            openGUI(p,"sheetEditor_id:"+id);
         }
+
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"terminal");
+        }
+
     }
 
-    // 指定キャラクターの編集
-    public static void openCharacterEditer(Player p,String id){
-        Inventory inv = Bukkit.createInventory(null,27,"§8- §6キャラクターシート §8- §7ID:"+id);
+    // シートエディター
+    public static void openSheetEditor(Player p,String id){
+        Inventory inv = Bukkit.createInventory(null,27,guiTitles.get("sheetEditor")+" §7id:"+id);
         File sheet = getSheetPath(p,id);
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
 
         // GUI装飾配置
-        ItemStack deco = makeItemStack(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), " ", " ");
         for (int num = 0; num < 9; num++)
-            inv.setItem(num, deco);
+            inv.setItem(num, guiItems.get("purplePane"));
 
-        // 名前/背景情報
+        // 名前と背景情報
+        String name = cfg.getString("name");
+        if(name == null){
+            name = "§c名前は未設定です。";
+        }
         String[] back;
         String str = cfg.getString("back");
         if(str == null){
-            back = new String[]{"§c背景情報は未設定です。", "§f以下のコマンドで名前を設定できます。", "§f[/shinobi charactersheet back " + id + " (好きな内容)]"};
+            back = new String[]{"§c背景情報は未設定です。", "§f以下のコマンドで[名前/背景情報]を設定できます。", "§f[/shinobi charactersheet [name/back] " + id + " (好きな内容)]"};
         } else {
             back = str.split("\\|");
         }
-        inv.setItem(10,makeItemStack(new ItemStack(Material.NAME_TAG),(String) cfg.get("name"),back));
+        inv.setItem(10,makeItemStack(new ItemStack(Material.NAME_TAG),name,back));
 
         // 流派情報
         if(cfg.get("style") == null){
-            inv.setItem(12,makeItemStack(new ItemStack(Material.BARRIER),"§d流派§7: §c未設定","§fクリックすることで設定出来ます。"));
+            inv.setItem(12,guiItems.get("sheetEditor_defStyle"));
         } else {
-            inv.setItem(12, playerInfoItems.get(cfg.getString("style")));
+            inv.setItem(12, guiItems.get("styleSelector_"+cfg.getString("style")));
+        }
+
+        // 階級情報
+        if(cfg.get("rank") == null){
+            inv.setItem(14,guiItems.get("sheetEditor_defRank"));
+        } else {
+            inv.setItem(14, guiItems.get("rankSelector_"+cfg.getString("rank")));
         }
 
         // 特技情報
-        inv.setItem(14,makeItemStack(new ItemStack(Material.REDSTONE),"§9特技","§fクリックで設定できます。"));
+        inv.setItem(16,makeItemStack(new ItemStack(Material.REDSTONE),"§9特技","§fクリックで設定できます。"));
+
+        // 忍法情報
+        inv.setItem(19,makeItemStack(new ItemStack(Material.MOJANG_BANNER_PATTERN),"§5忍法","§fクリックで設定できます。"));
+
+        // 戻るアイテム
+        inv.setItem(26,guiItems.get("terminal_back"));
 
         p.openInventory(inv);
     }
-    public static void clickedCharacterEditer(InventoryClickEvent e){
+    public static void clickedCharacterEditor(InventoryClickEvent e){
         // 例外処理
         Player p = (Player) e.getWhoClicked();
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
+        // 持ち出し防止
         e.setCancelled(true);
 
-        String id = e.getView().getTitle().replace("§8- §6キャラクターシート §8- §7ID:","");
+        // 編集対象選択
+        String id = getID(e.getView().getTitle());
         if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
-            openGUI(p,"styleselector id:"+id);
+            openGUI(p,"styleSelector_id:"+id);
+        } else if (e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§a階級§7:")) {
+            openGUI(p,"rankSelector_id:"+id);
         } else if (e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§9特技")){
             openSkillMenu(p,id);
+        } else if (e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§5忍法")) {
+            openGUI(p,"artsSelector_id:"+id);
+        }
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"sheetSelector");
         }
     }
 
-    // 流派選択GUI
+    // 流派セレクター
     public static void openStyleSelector(Player p,String id){
-        Inventory inv = Bukkit.createInventory(null,27,"§8- §5流派選択 §8- §7id:"+id);
+        File sheet = getSheetPath(p,id);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        ItemStack item;
+        Inventory inv = Bukkit.createInventory(null,27,guiTitles.get("styleSelector")+" §7id:"+id);
 
-        ItemStack deco = makeItemStack(new ItemStack(Material.RED_STAINED_GLASS_PANE), " ", " ");
+        // 装飾配置
         for (int num = 0; num < 9; num++)
-            inv.setItem(num, deco);
+            inv.setItem(num, guiItems.get("redPane"));
 
-        inv.setItem(11,playerInfoItems.get("hasuba"));
-        inv.setItem(13,playerInfoItems.get("kurama"));
-        inv.setItem(15,playerInfoItems.get("hagure"));
-        inv.setItem(20,playerInfoItems.get("hirasaka"));
-        inv.setItem(22,playerInfoItems.get("otogi"));
-        inv.setItem(24,playerInfoItems.get("oni"));
+        // ギミックアイテム
+        inv.setItem(11,guiItems.get("styleSelector_hasuba"));
+        inv.setItem(13,guiItems.get("styleSelector_kurama"));
+        inv.setItem(15,guiItems.get("styleSelector_hagure"));
+        inv.setItem(20,guiItems.get("styleSelector_hirasaka"));
+        inv.setItem(22,guiItems.get("styleSelector_otogi"));
+        inv.setItem(24,guiItems.get("styleSelector_oni"));
 
+        if(cfg.get("style") != null && guiItems.get("styleSelector_"+cfg.get("style")) != null) {
+            for (int i = 9; i < 27; i++) {
+                item = inv.getItem(i);
+                if (item != null && item.isSimilar(guiItems.get("styleSelector_" + cfg.get("style")))) {
+                    inv.setItem(i, makeEnchantedItemStack(inv.getItem(i)));
+                    break;
+                }
+            }
+        }
+
+        // 戻るアイテム
+        inv.setItem(26,guiItems.get("terminal_back"));
+        // GUI表示
         p.openInventory(inv);
     }
     public static void clickedStyleSelector(InventoryClickEvent e){
@@ -234,40 +281,63 @@ public class ShinobigamiGUI implements Listener {
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
+        // 持ち出し防止
         e.setCancelled(true);
+        // id取得
+        String id = getID(e.getView().getTitle());
 
-        String id = e.getView().getTitle().replace("§8- §5流派選択 §8- §7id:","");
-
+        // 流派選択
         if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§d流派§7:")){
             List<String> lores = e.getCurrentItem().getItemMeta().getLore();
             if(lores == null){
                 return;
             }
-            String lastLore = lores.get(lores.size()-1);
-            String cont = lastLore.replace("§8style id: ","");
+            String cont = getID(lores.get(lores.size()-1));
 
-            setCharacterInfo(p,id,"style",cont);
-            openGUI(p,"charaediter id:"+id);
+            setSheet(p,id,"style",cont);
+            openGUI(p,"sheetEditor_id:"+id);
+        }
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"sheetEditor_id:"+id);
         }
     }
 
     // 階級選択GUI
     public static void openRankSelector(Player p,String id){
-        Inventory inv = Bukkit.createInventory(null,27,"§8- §3階級選択 §8- §7id:"+id);
+        File sheet = getSheetPath(p,id);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        ItemStack item;
+        Inventory inv = Bukkit.createInventory(null,27,guiTitles.get("rankSelector")+" §7id:"+id);
 
-        ItemStack deco = makeItemStack(new ItemStack(Material.GREEN_STAINED_GLASS_PANE), " ", " ");
+        // 装飾配置
         for (int num = 0; num < 9; num++)
-            inv.setItem(num, deco);
+            inv.setItem(num, guiItems.get("greenPane"));
 
-        inv.setItem(10,playerInfoItems.get("grass"));
-        inv.setItem(12,playerInfoItems.get("low"));
-        inv.setItem(14,playerInfoItems.get("lowtop"));
-        inv.setItem(16,playerInfoItems.get("mid"));
-        inv.setItem(19,playerInfoItems.get("midtop"));
-        inv.setItem(21,playerInfoItems.get("high"));
-        inv.setItem(23,playerInfoItems.get("hightop"));
-        inv.setItem(25,playerInfoItems.get("head"));
+        // ギミックアイテム
+        inv.setItem(10,guiItems.get("rankSelector_grass"));
+        inv.setItem(12,guiItems.get("rankSelector_low"));
+        inv.setItem(14,guiItems.get("rankSelector_lowLeader"));
+        inv.setItem(16,guiItems.get("rankSelector_mid"));
+        inv.setItem(19,guiItems.get("rankSelector_midLeader"));
+        inv.setItem(21,guiItems.get("rankSelector_high"));
+        inv.setItem(23,guiItems.get("rankSelector_highLeader"));
+        inv.setItem(25,guiItems.get("rankSelector_head"));
 
+        if(cfg.get("style") != null && guiItems.get("rankSelector_"+cfg.get("style")) != null) {
+            for (int i = 9; i < 27; i++) {
+                item = inv.getItem(i);
+                if (item != null && item.isSimilar(guiItems.get("rankSelector_" + cfg.get("style")))) {
+                    inv.setItem(i, makeEnchantedItemStack(inv.getItem(i)));
+                    p.sendMessage("slot:" + i);
+                    break;
+                }
+            }
+        }
+
+        // 戻るアイテム
+        inv.setItem(26,guiItems.get("terminal_back"));
+        // GUI表示
         p.openInventory(inv);
     }
     public static void clickedRankSelector(InventoryClickEvent e){
@@ -276,20 +346,334 @@ public class ShinobigamiGUI implements Listener {
         if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
             return;
         }
+        // 持ち出し防止
         e.setCancelled(true);
+        // ID取得
+        String id = getID(e.getView().getTitle());
 
-        String id = e.getView().getTitle().replace("§8- §3階級選択 §8- §7id:","");
-
+        // 階級選択
         if(e.getCurrentItem().getItemMeta().getDisplayName().startsWith("§a階級§7:")){
             List<String> lores = e.getCurrentItem().getItemMeta().getLore();
             if(lores == null){
                 return;
             }
-            String lastLore = lores.get(lores.size()-1);
-            String cont = lastLore.replace("§8rank id: ","");
+            String cont = getID(lores.get(lores.size()-1));
 
-            setCharacterInfo(p,id,"rank",cont);
-            openGUI(p,"charaediter id:"+id);
+            setSheet(p,id,"rank",cont);
+            openGUI(p,"sheetEditor_id:"+id);
+        }
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"sheetEditor_id:"+id);
+        }
+    }
+
+    // 忍法スロットGUI
+    public static void openArtSlotSelector(Player p,String id) {
+        // パスの準備
+        File sheet = getSheetPath(p, id);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        Inventory inv;
+
+        inv = Bukkit.createInventory(null,27,guiTitles.get("artsSlotSelector")+" §7id:"+id);
+        // 装飾配置
+        for (int num = 0; num < 9; num++)
+            inv.setItem(num, guiItems.get("grayPane"));
+        for (int num = 18; num < 26; num++)
+            inv.setItem(num, guiItems.get("grayPane"));
+
+        // ギミックアイテム
+        for(int i=9;i<18;i++) {
+
+            // 忍法がセットされているかの確認
+            String artID = cfg.getString("art_"+(i-8));
+            if(artID != null){
+
+                Matcher m = Pattern.compile("(\\w+)_(\\d+)").matcher(artID);
+                String artType;
+                int artNumber;
+                if(m.find()){
+                    artType = m.group(1);
+                    artNumber = Integer.parseInt(m.group(2));
+                } else {
+                    p.sendMessage(prefix+"§cIDの入力形式が違います。§7入力値:"+artID);
+                    return;
+                }
+
+                inv.setItem(i,makeArtsBook(artType,artNumber));
+                continue;
+            }
+
+            if(numbers.get("rank_"+cfg.get("rank")+"_arts") >= i-8){
+                inv.setItem(i,guiItems.get("artsSelector_emptySlot"));
+            } else {
+                inv.setItem(i,guiItems.get("artsSelector_lockedSlot"));
+            }
+        }
+
+        // 戻るアイテム
+        inv.setItem(26,guiItems.get("terminal_back"));
+
+        // インベントリを開く
+        p.openInventory(inv);
+    }
+
+    public static void clickedArtSlotSelector(InventoryClickEvent e) {
+        // 例外処理
+        Player p = (Player) e.getWhoClicked();
+        if (e.getCurrentItem() == null || e.getCurrentItem().getItemMeta() == null) {
+            return;
+        }
+        // 持ち出し防止
+        e.setCancelled(true);
+        // ID取得
+        String id = getID(e.getView().getTitle());
+
+        // スロット選択
+        p.sendMessage("slot:"+e.getSlot()+"bool:"+!e.getCurrentItem().isSimilar(guiItems.get("artsSelector_lockedSlot")));
+        if (e.getSlot() > 8 && e.getSlot() < 18 && !e.getCurrentItem().isSimilar(guiItems.get("artsSelector_lockedSlot"))) {
+            openArtsSelector(p, id, "hub_slot:" + (e.getSlot() - 8));
+        }
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"sheetEditor_id:"+id);
+        }
+    }
+
+    // 忍法追加GUI
+    public static void openArtsSelector(Player p,String id,String type){
+        File sheet = getSheetPath(p, id);
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        Inventory inv;
+
+        // ハブ
+        if(type.startsWith("hub_slot:")){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(type);
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+                return;
+            }
+
+            inv = Bukkit.createInventory(null,27,guiTitles.get("artsSelector")+" §7slot:"+artSlot+" §7id:"+id);
+            // 装飾配置
+            for (int num = 0; num < 9; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+            for (int num = 18; num < 26; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+
+            // ギミックアイテム
+            inv.setItem(10,guiItems.get("artsSelector_utility_attack"));
+            inv.setItem(12,guiItems.get("artsSelector_utility_support"));
+            inv.setItem(14,guiItems.get("artsSelector_utility_equipment"));
+            inv.setItem(16,guiItems.get("artsSelector_style"));
+
+            // 戻るアイテム
+            inv.setItem(26,guiItems.get("terminal_back"));
+
+            // インベントリを開く
+            p.openInventory(inv);
+        }
+
+        // 汎用忍法 攻撃
+        else if(type.startsWith("utility_attack_slot:")){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(type);
+            //String artType;
+            //if(m.find()){
+            //    artType = m.group(1);
+            //} else {
+            //    p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+            //    return;
+            //}
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+                return;
+            }
+            inv = Bukkit.createInventory(null,54,guiTitles.get("artsSelector")+" §7slot:"+artSlot+" §7id:"+id);
+            // 装飾配置
+            for (int num = 0; num < 9; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+
+            // ギミックアイテム
+            String[][] art = arts.get("utility_attack");
+            for(int i = 0,slot = 9;i < art.length; i++,slot++){
+                inv.setItem(slot,makeArtsBook("utility_attack",i));
+            }
+
+            // 戻るアイテム
+            inv.setItem(53,guiItems.get("terminal_back"));
+
+            // インベントリを開く
+            p.openInventory(inv);
+        }
+        // 汎用忍法 サポート
+        else if(type.startsWith("utility_support_slot:")){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(type);
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+                return;
+            }
+            inv = Bukkit.createInventory(null,54,guiTitles.get("artsSelector")+" §7slot:"+artSlot+" §7id:"+id);
+            // 装飾配置
+            for (int num = 0; num < 9; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+
+            // ギミックアイテム
+            String[][] art = arts.get("utility_support");
+            for(int i = 0,slot = 9;i < art.length; i++,slot++){
+                inv.setItem(slot,makeArtsBook("utility_support",i));
+            }
+
+            // 戻るアイテム
+            inv.setItem(53,guiItems.get("terminal_back"));
+
+            // インベントリを開く
+            p.openInventory(inv);
+        }
+        // 汎用忍法 装備
+        else if(type.startsWith("utility_equipment_slot:")){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(type);
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+                return;
+            }
+            inv = Bukkit.createInventory(null,54,guiTitles.get("artsSelector")+" §7slot:"+artSlot+" §7id:"+id);
+            // 装飾配置
+            for (int num = 0; num < 9; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+
+            // ギミックアイテム
+            String[][] art = arts.get("utility_equipment");
+            for(int i = 0,slot = 9;i < art.length; i++,slot++){
+                inv.setItem(slot,makeArtsBook("utility_equipment",i));
+            }
+
+            // 戻るアイテム
+            inv.setItem(53,guiItems.get("terminal_back"));
+
+            // インベントリを開く
+            p.openInventory(inv);
+        }
+
+        else if(type.startsWith("style_slot:")){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(type);
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+type);
+                return;
+            }
+            inv = Bukkit.createInventory(null,54,guiTitles.get("artsSelector")+" §7slot:"+artSlot+" §7id:"+id);
+            // 装飾配置
+            for (int num = 0; num < 9; num++)
+                inv.setItem(num, guiItems.get("grayPane"));
+
+            // ギミックアイテム
+            p.sendMessage("style_"+cfg.get("style"));
+            String[][] art = arts.get("style_"+cfg.get("style"));
+            for(int i = 0,slot = 9;i < art.length; i++,slot++){
+                inv.setItem(slot,makeArtsBook("style_"+cfg.get("style"),i));
+            }
+
+            // 戻るアイテム
+            inv.setItem(53,guiItems.get("terminal_back"));
+
+            // インベントリを開く
+            p.openInventory(inv);
+        }
+    }
+    public static void clickedArtsSelector(InventoryClickEvent e){
+        // 例外処理
+        Player p = (Player) e.getWhoClicked();
+        if(e.getCurrentItem()==null || e.getCurrentItem().getItemMeta() == null){
+            return;
+        }
+        // 持ち出し防止
+        e.setCancelled(true);
+        // ID取得
+        String id = getID(e.getView().getTitle());
+        // ハブ
+        if(e.getCurrentItem().isSimilar(guiItems.get("artsSelector_utility_attack"))){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(e.getView().getTitle());
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+e.getView().getTitle());
+                return;
+            }
+            openArtsSelector(p,id,"utility_attack_slot:"+artSlot);
+        } else if(e.getCurrentItem().isSimilar(guiItems.get("artsSelector_utility_support"))){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(e.getView().getTitle());
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+e.getView().getTitle());
+                return;
+            }
+            openArtsSelector(p,id,"utility_support_slot:"+artSlot);
+        } else if(e.getCurrentItem().isSimilar(guiItems.get("artsSelector_utility_equipment"))){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(e.getView().getTitle());
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+e.getView().getTitle());
+                return;
+            }
+            openArtsSelector(p,id,"utility_equipment_slot:"+artSlot);
+        } else if(e.getCurrentItem().isSimilar(guiItems.get("artsSelector_style"))){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(e.getView().getTitle());
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+e.getView().getTitle());
+                return;
+            }
+            openArtsSelector(p,id,"style_slot:"+artSlot);
+        }
+        // 忍法
+        else if(e.getCurrentItem().getType().equals(Material.ENCHANTED_BOOK)){
+            Matcher m = Pattern.compile("slot:(\\d+)").matcher(e.getView().getTitle());
+            String artSlot;
+            if(m.find()){
+                artSlot = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cスロットの入力形式が違います。§7入力値:"+e.getView().getTitle());
+                return;
+            }
+            List<String> lores = e.getCurrentItem().getItemMeta().getLore();
+            if(lores == null){
+                return;
+            }
+            m = Pattern.compile("artID:(.+)").matcher(lores.get(lores.size()-1));
+            String artID;
+            if(m.find()){
+                artID = m.group(1);
+            } else {
+                p.sendMessage(prefix+"§cIDの入力形式が違います。§7入力値:"+lores.get(lores.size()-1));
+                return;
+            }
+
+            setSheet(p,id,"art_"+artSlot,artID);
+        }
+        // 前のGUIへ戻る
+        else if (e.getCurrentItem().equals(guiItems.get("terminal_back"))){
+            openGUI(p,"artsSelector_id:"+id);
         }
     }
 }

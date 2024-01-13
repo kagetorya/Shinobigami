@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 public class ShinobigamiUtils {
 
-    public static final Logger logger = Logger.getLogger(ShinobigamiUtils.class.getName());
+
     // アイテムName変更
     public static ItemStack setItemName(ItemStack is, String name){
         if(is.getItemMeta() == null){
@@ -118,21 +118,6 @@ public class ShinobigamiUtils {
         return characters;
     }
 
-    public static File getSheetPath(Player p,String id){
-        File sheetFolder = new File(Shinobigami.getInstance().getDataFolder(),"Sheets");
-        File playerFolder = new File(sheetFolder, p.getUniqueId().toString());
-
-        // 例外処理(プレイヤー別ディレクトリの生成)
-        if(!playerFolder.exists()){
-            if(playerFolder.mkdirs()){
-                p.sendMessage("§5§lS§dhinobi §7》§fプレイヤー別シート管理フォルダを生成しました。");
-            } else {
-                p.sendMessage("§5§lS§dhinobi §7》§f§cプレイヤー別シート管理フォルダの生成に失敗しました。");
-            }
-        }
-
-        return new File(playerFolder,id+".yml");
-    }
 
     public static String getID(String str){
         int index = str.lastIndexOf("id:");
@@ -142,26 +127,7 @@ public class ShinobigamiUtils {
         return str.substring(index+"id:".length());
     }
 
-    public static void setSheet(Player p,String id,String tag,String cont){
-        File sheet = getSheetPath(p,id);
-        // idの例外処理
-        if(!(sheet.exists())){
-            p.sendMessage("§cError: そのIDのキャラクターシートは存在しません");
-            return;
-        }
-        // キャラクター名の保存
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
-        cfg.set(tag, cont);
-        try{
-            cfg.save(sheet);
-        } catch (IOException e){
-            logger.log(Level.SEVERE,"couldn't save file");
-        }
 
-        // 処理報告とエフェクト
-        p.sendMessage("§5§lS§dhinobi §7》データが設定されました。§7id: "+id);
-        p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
-    }
 
     public static void setSheetAsList(Player p,String id,String tag,List<String> cont){
         File sheet = getSheetPath(p,id);

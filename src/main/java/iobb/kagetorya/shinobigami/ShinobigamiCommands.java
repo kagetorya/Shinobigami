@@ -17,11 +17,11 @@ import static iobb.kagetorya.shinobigami.ShinobigamiPoints.addPoint;
 import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
 import static iobb.kagetorya.shinobigami.ShinobigamiSkillManager.*;
 import static iobb.kagetorya.shinobigami.ShinobigamiTables.prefix;
+import static iobb.kagetorya.shinobigami.ShinobigamiSheetUtils.getSheetPath;
 
 
 @SuppressWarnings("NullableProblems")
 public class ShinobigamiCommands implements TabExecutor {
-
 
     @Override
     public boolean onCommand(CommandSender s, Command cmd, String label, String... args){
@@ -32,13 +32,19 @@ public class ShinobigamiCommands implements TabExecutor {
         }
         Player p = (Player) s;
 
+        // プラグイン管理用コマンド [/shinobigami]
         if (cmd.getName().equalsIgnoreCase("shinobigami")){
+
+            // GUI表示 [/shinobigami]
             if(args.length == 0){
                 openGUI(p,"terminal");
                 return true;
             }
-            // キャラクターシート管理コマンド
+
+            // キャラクターシート管理コマンド [/shinobigami charactersheet]
             if(args[0].equalsIgnoreCase("charactersheet")){
+
+                // コマンド入力の例外処理
                 if(args.length == 1){
                     return false;
                 }
@@ -51,6 +57,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     }
                     return makeCharacterSheet(p,args[2]);
                 }
+
                 // シートの削除
                 else if(args[1].equalsIgnoreCase("delete")){
                     // コマンド入力の例外処理
@@ -59,6 +66,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     }
                     return deleteCharacterSheet(p,args[2]);
                 }
+
                 // キャラクターの名前の設定
                 else if(args[1].equalsIgnoreCase("name")){
                     // コマンド入力の例外処理
@@ -69,6 +77,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     setSheet(p,args[2],"name",args[3]);
                     return true;
                 }
+
                 // キャラクターの背景の設定
                 else if(args[1].equalsIgnoreCase("back")){
                     // コマンド入力の例外処理
@@ -81,6 +90,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     setSheet(p,args[2],"back",lore);
                     return true;
                 }
+
                 // キャラクターの流派の設定
                 else if(args[1].equalsIgnoreCase("style")){
                     // コマンド入力の例外処理
@@ -97,6 +107,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     setSheet(p,args[2],"style",args[3]);
                     return true;
                 }
+
                 // キャラクターの階級の設定
                 else if(args[1].equalsIgnoreCase("rank")){
                     // コマンド入力の例外処理
@@ -113,6 +124,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     setSheet(p,args[2],"rank",args[3]);
                     return true;
                 }
+
                 // キャラクターの特技の設定
                 else if(args[1].equalsIgnoreCase("skill")){
 
@@ -132,6 +144,7 @@ public class ShinobigamiCommands implements TabExecutor {
                     return true;
 
                 }
+
                 // キャラクターの功績点の設定
                 else if(args[1].equalsIgnoreCase("point")){
                     // コマンド入力の例外処理
@@ -150,7 +163,11 @@ public class ShinobigamiCommands implements TabExecutor {
                     }
                 }
 
-            }else if (args[0].equalsIgnoreCase("GUI")){
+            }
+            // プラグインGUI管理コマンド [/shinobigami GUI]
+            else if (args[0].equalsIgnoreCase("GUI")){
+
+                // スキルメニューの表示 [/shinobigami GUI skill]
                 if(args[2].equalsIgnoreCase("skill")){
                     openSkillMenu(p,args[1]);
                     return true;

@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 import static iobb.kagetorya.shinobigami.ShinobigamiSkillManager.openSkillMenu;
 import static iobb.kagetorya.shinobigami.ShinobigamiTables.*;
 import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
+import static iobb.kagetorya.shinobigami.ShinobigamiSheetUtils.getConfig;
+import static iobb.kagetorya.shinobigami.ShinobigamiSheetUtils.getSheetPath;
 
 public class ShinobigamiGUI implements Listener {
 
@@ -129,8 +131,7 @@ public class ShinobigamiGUI implements Listener {
         // キャラクターシートの一覧表示
         int slot = 9;
         for(String id : getCharacterIDs(p)){
-            File sheet = getSheetPath(p,id);
-            FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+            FileConfiguration cfg = getConfig(p,id);
             if(cfg.get("name") == null){
                 inv.setItem(slot,makeItemStack(new ItemStack(Material.PAPER),"§b"+id,"§f名前: §c未設定"," ","§f以下のコマンドで名前を設定できます。","§f[/shinobi charactersheet name "+id+" (好きな名前)]"));
             } else {

@@ -2,14 +2,13 @@ package iobb.kagetorya.shinobigami;
 
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.util.List;
 
 import static iobb.kagetorya.shinobigami.ShinobigamiTables.numbers;
 import static iobb.kagetorya.shinobigami.ShinobigamiUtils.*;
+import static iobb.kagetorya.shinobigami.ShinobigamiSheetUtils.getConfig;
 
 public class ShinobigamiSkillManager {
 
@@ -48,8 +47,7 @@ public class ShinobigamiSkillManager {
     // スキル取得画面
     public static void openSkillMenu(Player p,String id){
         // シート準備
-        File sheet = getSheetPath(p,id);
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        FileConfiguration cfg = getConfig(p,id);
 
         // 行間
         p.sendMessage(" ");
@@ -94,8 +92,7 @@ public class ShinobigamiSkillManager {
     public static void editSkill(Player p, String id, String skill){
 
         // シートの準備
-        File sheet = getSheetPath(p, id);
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        FileConfiguration cfg = getConfig(p,id);
         List<String> skillList = cfg.getStringList("skills");
 
         // 既に取得済みのスキルを渡された場合
@@ -113,8 +110,7 @@ public class ShinobigamiSkillManager {
     public static void addSkill(Player p, String id, String skill){
 
         // シート準備
-        File sheet = getSheetPath(p, id);
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        FileConfiguration cfg = getConfig(p,id);
         List<String> skillList = cfg.getStringList("skills");
 
         // 取得上限の確認
@@ -131,8 +127,7 @@ public class ShinobigamiSkillManager {
     public static void removeSkill(Player p, String id, String skill){
 
         // シート準備
-        File sheet = getSheetPath(p, id);
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        FileConfiguration cfg = getConfig(p,id);
         List<String> skillList = cfg.getStringList("skills");
 
         // 最後に取得したスキルの削除
@@ -172,8 +167,7 @@ public class ShinobigamiSkillManager {
     // スキル数の確認
     public static boolean checkSkill(Player p, String id){
         // シート準備
-        File sheet = getSheetPath(p, id);
-        FileConfiguration cfg = YamlConfiguration.loadConfiguration(sheet);
+        FileConfiguration cfg = getConfig(p,id);
         List<String> skillList = cfg.getStringList("skills");
 
 
